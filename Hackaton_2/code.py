@@ -238,7 +238,7 @@ def validation(regressor, X_test, y_test):
     y_pred = regressor(X_test)
     return (recall(y_test, y_pred), precision(y_test, y_pred), f1_score(y_test, y_pred))
 
-threshold = 0.5
+threshold = 0.28
 result = {
     "linear":{}, 
     "logistic":{}, 
@@ -318,7 +318,7 @@ beta_hat_dot_X_test = np.dot(X_test, beta) + intercept
 y_test = np.array(y_test)  
 
 
-threshold = 0.22 # A modifier
+threshold = 0.28 # A modifier
 predicted = beta_hat_dot_X_test >= threshold  
 
 
