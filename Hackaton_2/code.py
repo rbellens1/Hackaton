@@ -107,7 +107,7 @@ CELL N°2.2 : ANALYZE THE CORRELATION WITH DIABETE
 def sort_features(corr_matrix):
     # Sort the correlation matrix with respect to the target variable
     sorted_corr_matrix = corr_matrix["Diabetes"].abs().sort_values(ascending=False)
-    #print(sorted_corr_matrix)
+    sorted_corr_matrix=sorted_corr_matrix.tolist()
     return(sorted_corr_matrix)
 
 #Tutorial: https://www.geeksforgeeks.org/sort-correlation-matrix-in-python/
