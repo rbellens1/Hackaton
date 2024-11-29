@@ -10,21 +10,29 @@ import pandas as pd
 import numpy as np
 import warnings
 from sklearn.preprocessing import *
+from sklearn import datasets #
 from sklearn.model_selection import KFold
 warnings.filterwarnings('ignore')
 from sklearn.linear_model import LinearRegression
 from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsRegressor
+from sklearn.metrics import roc_curve, roc_auc_score
+from sklearn.metrics import confusion_matrix
+from sklearn.model_selection import train_test_split
+
+
 """
 CELL N°1.2 : IMPORTING THE DATASET
 
 @pre:  /
 @post: The object `df` should contain a Pandas DataFrame corresponding to the file `diabetes_dataset.csv`
 """
-df = pd.read_csv("diabetes_dataset.csv") # To modify
+df = pd.read_csv("diabetes_dataset.csv")
 
-df.info()
-df.describe()
+#df.info()
+#df.describe()
+
+
 """
 CELL N°1.3 : IS THE DATASET BALANCED?
 
@@ -41,6 +49,8 @@ plt.figure(figsize=(6, 6))
 plt.pie(diabetes_counts, labels=labels, autopct='%1.1f%%', startangle=90, colors=colors)
 plt.title('Répartition des individus selon le diabète')
 plt.show()
+
+
 """
 CELL N°1.4 : SCALE THE DATASET
 
@@ -58,8 +68,10 @@ def scale_dataset(df):
     return scaled_df
 
 df = scale_dataset(df)
-df.info()
-df.describe()
+#df.info()
+#df.describe()
+
+
 """
 CELL N°2.1 : CORRELATION MATRIX
 
@@ -67,8 +79,23 @@ CELL N°2.1 : CORRELATION MATRIX
 @post: `corr_matrix` is a Pandas DataFrame that contains the correlation matrix of the full dataset
 """
 
-# To modify
-corr_matrix = pd.DataFrame()
+### Calculate correlation matrix
+
+# Calculate "pearson" correlation matrix
+corr_matrix = df.corr(method='pearson') 
+#corr_matrix.info()
+#corr_matrix.describe()
+
+
+### Plot with seaborn heatmap
+
+# Plot & costumisation
+sns.heatmap(corr_matrix, cmap="Blues", annot=False, square=True, )
+
+
+#Tutorial: https://www.geeksforgeeks.org/create-a-correlation-matrix-using-python/
+
+
 """
 CELL N°2.2 : ANALYZE THE CORRELATION WITH DIABETE
 
@@ -78,10 +105,16 @@ CELL N°2.2 : ANALYZE THE CORRELATION WITH DIABETE
 """
 
 def sort_features(corr_matrix):
-    # To modify
-    return list(corr_matrix.index) 
+    # Sort the correlation matrix with respect to the target variable
+    sorted_corr_matrix = corr_matrix["Diabetes"].abs().sort_values(ascending=False)
+    #print(sorted_corr_matrix)
+    return(sorted_corr_matrix)
+
+#Tutorial: https://www.geeksforgeeks.org/sort-correlation-matrix-in-python/
 
 sorted_features = sort_features(corr_matrix)
+
+
 """
 CELL N°3.1 : LINEAR REGRESSOR
 
@@ -94,6 +127,8 @@ def linear_regressor(X_train, y_train, threshold = 0.5):
     model = LinearRegression().fit(X_train, y_train)
     
     return lambda X_test : (model.predict(X_test)>=threshold).astype(int)
+
+
 """
 CELL N°3.2 : LOGISTIC REGRESSOR
 
@@ -104,7 +139,9 @@ CELL N°3.2 : LOGISTIC REGRESSOR
 def logistic_regressor(X_train, y_train, threshold = 0.5):
     model = LogisticRegression().fit(X_train, y_train)
     
-    return lambda X_test : (model.predict(X_test)>=threshold).astype(int)
+    return lambda X_test : (model.predict_proba(X_test)[:,1] > threshold).astype(int)
+
+
 """
 CELL N°3.3 : KNN REGRESSOR
 
@@ -116,6 +153,8 @@ def knn_regressor(X_train, y_train, threshold = 0.5, n_neighbors = 10):
     model = KNeighborsRegressor(n_neighbors).fit(X_train, y_train)
     
     return lambda X_test : (model.predict(X_test)>=threshold).astype(int)
+
+
 """
 CELL N°4.1 : PRECISION SCORE
 
@@ -125,7 +164,6 @@ CELL N°4.1 : PRECISION SCORE
 """
 
 def precision(y_test, y_pred):
-    # To modify
     predict_true=0
     real_true=0
     for i in range(len(y_test)):
@@ -135,6 +173,8 @@ def precision(y_test, y_pred):
               predict_true+=1
     if predict_true==0: return 0
     return real_true/predict_true
+
+
 """
 CELL N°4.2 : RECALL SCORE
 
@@ -144,7 +184,6 @@ CELL N°4.2 : RECALL SCORE
 """
 
 def recall(y_test, y_pred):
-    # To modify
     real_true=0
     all_true=0
     for k in range(len(y_test)):
@@ -154,6 +193,8 @@ def recall(y_test, y_pred):
             all_true+=1
     if all_true==0: return 0
     return real_true/all_true
+
+
 """
 CELL N°4.3 : F1 SCORE
 
@@ -167,6 +208,8 @@ def f1_score(y_test, y_pred):
     p=precision(y_test,y_pred)
     if(r==p==0): return 0
     return 2/((r)**(-1)+(p)**(-1))
+
+
 """
 CELL N°5.1 : K-FOLD PREPARATION
 
@@ -181,6 +224,8 @@ kf = KFold(n_splits = 3,shuffle=True,random_state=1109)
 
 X = df.drop(columns=["Diabetes"]) #remove the column "Diabetes"
 y = df["Diabetes"] #keep only the column "Diabetes"
+
+
 """
 CELL N°5.2 : FIND THE RIGHT COMBINATION LENGTH/REGRESSOR
 
@@ -190,11 +235,9 @@ CELL N°5.2 : FIND THE RIGHT COMBINATION LENGTH/REGRESSOR
 """
 
 def validation(regressor, X_test, y_test):
-    # Nothing to do here!
     y_pred = regressor(X_test)
     return (recall(y_test, y_pred), precision(y_test, y_pred), f1_score(y_test, y_pred))
 
-# To modify
 threshold = 0.5
 result = {
     "linear":{}, 
@@ -235,6 +278,8 @@ for i in np.arange(1,X.shape[1]+1,dtype=int): #faire pour different nombre de co
     result["linear"][i]=np.sum(val[0], axis=0)/3
     result["logistic"][i]=np.sum(val[1], axis=0)/3
     result["knn"][i]=np.sum(val[2], axis=0)/3
+
+
 """
 CELL N°5.3 : VISUALIZE THE SCORES
 
@@ -244,11 +289,11 @@ CELL N°5.3 : VISUALIZE THE SCORES
 
 print(result)
 
-# Nothing to do here, just run me! 
-
 from helper import plot_result
 plot_result(result, threshold, to_show = "recall")
 plot_result(result, threshold, to_show = "f1_score")
+
+
 """
 CELL N°6.1 : VISUALIZE YOUR RESULTS
 
@@ -256,14 +301,66 @@ CELL N°6.1 : VISUALIZE YOUR RESULTS
 @post: /
 """
 
-# To modify
-fig, ax = plt.subplots(figsize=(6, 6))
-fig.patch.set_facecolor("LightBlue") 
-ax.set_facecolor("white")
-ax.text(0.5, 0.5, 'Feel free!', fontsize=40, ha='center', va='center', color='blue', transform=ax.transAxes)
-for spine in ax.spines.values():
-    spine.set_edgecolor("blue")
-    spine.set_linewidth(2)
-ax.set_xticks([])
-ax.set_yticks([])
+X = df.drop(columns=["Diabetes"]) 
+y = df["Diabetes"]                
+
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1109)
+
+model = LogisticRegression()
+model.fit(X_train, y_train)
+
+
+beta = model.coef_.flatten()   
+intercept = model.intercept_[0]  
+
+beta_hat_dot_X_test = np.dot(X_test, beta) + intercept 
+y_test = np.array(y_test)  
+
+
+threshold = 0.22 # A modifier
+predicted = beta_hat_dot_X_test >= threshold  
+
+
+tp = (predicted == 1) & (y_test == 1)  
+tn = (predicted == 0) & (y_test == 0)  
+fp = (predicted == 1) & (y_test == 0)  
+fn = (predicted == 0) & (y_test == 1) 
+
+
+sns.set_style("whitegrid")
+plt.figure(figsize=(12, 8))
+
+plt.scatter(beta_hat_dot_X_test[tp], y_test[tp], color='green', alpha=0.7, edgecolor='k', label="True Positives (TP)")
+plt.scatter(beta_hat_dot_X_test[tn], y_test[tn], color='blue', alpha=0.7, edgecolor='k', label="True Negatives (TN)")
+plt.scatter(beta_hat_dot_X_test[fp], y_test[fp], color='orange', alpha=0.7, edgecolor='k', label="False Positives (FP)")
+plt.scatter(beta_hat_dot_X_test[fn], y_test[fn], color='red', alpha=0.7, edgecolor='k', label="False Negatives (FN)")
+
+plt.fill_betweenx(
+    y=[min(y_test) - 0.5, max(y_test) + 0.5],
+    x1=min(beta_hat_dot_X_test) - 0.5,
+    x2=threshold,
+    color="lightblue",
+    alpha=0.2,
+    label="Negative Region"
+)
+plt.fill_betweenx(
+    y=[min(y_test) - 0.5, max(y_test) + 0.5],
+    x1=threshold,
+    x2=max(beta_hat_dot_X_test) + 0.5,
+    color="lightcoral",
+    alpha=0.2,
+    label="Positive Region"
+)
+
+plt.axvline(x=threshold, color='black', linestyle='--', linewidth=2, label="Threshold ($\\tau = 0.22$)")
+
+
+plt.title(r"Scatter Plot for Logistic Regression Predictions", fontsize=16)
+plt.xlabel(r"$\hat{\beta}^\top x_i$", fontsize=14)
+plt.ylabel("Diabetes Prediction", fontsize=14)
+plt.legend(fontsize=12, loc="upper left")
+plt.xticks(fontsize=12)
+plt.yticks(fontsize=12)
+
 plt.show()
