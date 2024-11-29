@@ -301,32 +301,25 @@ CELL N°6.1 : VISUALIZE YOUR RESULTS
 @post: /
 """
 
-X = df.drop(columns=["Diabetes"]) 
-y = df["Diabetes"]                
+X = df.drop(columns=["Diabetes"])
+y = df["Diabetes"]
+Xtrain, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1109)
+
+model = LinearRegression().fit(X_train, y_train)
+beta = model.coef
+intercept = model.intercept_
+
+beta_hat_dot_X_test = np.dot(X_test, beta) + intercept
+y_test = np.array(y_test)
+
+threshold = 0.28
+predicted = beta_hat_dot_X_test >= threshold
 
 
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1109)
-
-model = LogisticRegression()
-model.fit(X_train, y_train)
-
-
-beta = model.coef_.flatten()   
-intercept = model.intercept_[0]  
-
-beta_hat_dot_X_test = np.dot(X_test, beta) + intercept 
-y_test = np.array(y_test)  
-
-
-threshold = 0.28 # A modifier
-predicted = beta_hat_dot_X_test >= threshold  
-
-
-tp = (predicted == 1) & (y_test == 1)  
-tn = (predicted == 0) & (y_test == 0)  
-fp = (predicted == 1) & (y_test == 0)  
-fn = (predicted == 0) & (y_test == 1) 
-
+tp = (predicted == 1) & (y_test == 1)  # True Positives
+tn = (predicted == 0) & (y_test == 0)  # True Negatives
+fp = (predicted == 1) & (y_test == 0)  # False Positives
+fn = (predicted == 0) & (y_test == 1)  # False Negatives
 
 sns.set_style("whitegrid")
 plt.figure(figsize=(12, 8))
@@ -335,6 +328,7 @@ plt.scatter(beta_hat_dot_X_test[tp], y_test[tp], color='green', alpha=0.7, edgec
 plt.scatter(beta_hat_dot_X_test[tn], y_test[tn], color='blue', alpha=0.7, edgecolor='k', label="True Negatives (TN)")
 plt.scatter(beta_hat_dot_X_test[fp], y_test[fp], color='orange', alpha=0.7, edgecolor='k', label="False Positives (FP)")
 plt.scatter(beta_hat_dot_X_test[fn], y_test[fn], color='red', alpha=0.7, edgecolor='k', label="False Negatives (FN)")
+
 
 plt.fill_betweenx(
     y=[min(y_test) - 0.5, max(y_test) + 0.5],
@@ -353,13 +347,14 @@ plt.fill_betweenx(
     label="Positive Region"
 )
 
-plt.axvline(x=threshold, color='black', linestyle='--', linewidth=2, label="Threshold ($\\tau = 0.22$)")
+plt.axvline(x=threshold, color='black', linestyle='--', linewidth=2, label="Threshold ($\tau = 0.28$)")
 
-
-plt.title(r"Scatter Plot for Logistic Regression Predictions", fontsize=16)
+plt.title(r"Scatter Plot", fontsize=16)
 plt.xlabel(r"$\hat{\beta}^\top x_i$", fontsize=14)
 plt.ylabel("Diabetes Prediction", fontsize=14)
+
 plt.legend(fontsize=12, loc="upper left")
+
 plt.xticks(fontsize=12)
 plt.yticks(fontsize=12)
 
