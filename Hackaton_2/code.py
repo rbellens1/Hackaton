@@ -294,19 +294,17 @@ plot_result(result, threshold, to_show = "recall")
 plot_result(result, threshold, to_show = "f1_score")
 
 
-"""
+""""
 CELL N°6.1 : VISUALIZE YOUR RESULTS
 
 @pre:  /
 @post: /
 """
 
-X = df.drop(columns=["Diabetes"])
-y = df["Diabetes"]
-Xtrain, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1109)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=1109)
 
 model = LinearRegression().fit(X_train, y_train)
-beta = model.coef
+beta = model.coef_
 intercept = model.intercept_
 
 beta_hat_dot_X_test = np.dot(X_test, beta) + intercept
@@ -328,34 +326,3 @@ plt.scatter(beta_hat_dot_X_test[tp], y_test[tp], color='green', alpha=0.7, edgec
 plt.scatter(beta_hat_dot_X_test[tn], y_test[tn], color='blue', alpha=0.7, edgecolor='k', label="True Negatives (TN)")
 plt.scatter(beta_hat_dot_X_test[fp], y_test[fp], color='orange', alpha=0.7, edgecolor='k', label="False Positives (FP)")
 plt.scatter(beta_hat_dot_X_test[fn], y_test[fn], color='red', alpha=0.7, edgecolor='k', label="False Negatives (FN)")
-
-
-plt.fill_betweenx(
-    y=[min(y_test) - 0.5, max(y_test) + 0.5],
-    x1=min(beta_hat_dot_X_test) - 0.5,
-    x2=threshold,
-    color="lightblue",
-    alpha=0.2,
-    label="Negative Region"
-)
-plt.fill_betweenx(
-    y=[min(y_test) - 0.5, max(y_test) + 0.5],
-    x1=threshold,
-    x2=max(beta_hat_dot_X_test) + 0.5,
-    color="lightcoral",
-    alpha=0.2,
-    label="Positive Region"
-)
-
-plt.axvline(x=threshold, color='black', linestyle='--', linewidth=2, label="Threshold ($\tau = 0.28$)")
-
-plt.title(r"Scatter Plot", fontsize=16)
-plt.xlabel(r"$\hat{\beta}^\top x_i$", fontsize=14)
-plt.ylabel("Diabetes Prediction", fontsize=14)
-
-plt.legend(fontsize=12, loc="upper left")
-
-plt.xticks(fontsize=12)
-plt.yticks(fontsize=12)
-
-plt.show()
